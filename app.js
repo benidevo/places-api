@@ -2,13 +2,18 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 const PlacesRoutes = require('./routes/placesRoutes');
+const usersRoutes = require('./routes/usersRoutes');
 const HttpError = require('./models/httpError');
 
 const app = express();
 
 app.use(bodyParser.json());
 
+// places routes
 app.use('/api/places', PlacesRoutes);
+
+// users routes
+app.use('/api/users', usersRoutes);
 
 app.use((req, res, next) => {
   const error = new HttpError('Invalid route', 404);
