@@ -1,11 +1,11 @@
+const { validationResult } = require('express-validator');
 const { v4: uuid } = require('uuid');
-const HttpError = require('../models/httpError');
 
 const DUMMY_USERS = [
   {
     id: 'u1',
-    name: 'Max Schwarz',
-    email: 'test@test.com',
+    name: 'John Doe',
+    email: 'johndoe@example.com',
     password: 'testers'
   }
 ];
@@ -15,11 +15,16 @@ exports.getUsers = (req, res) => {
 };
 
 exports.signup = (req, res) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ message: 'Invalid Input. Kindly check your input values,' });
+  }
   const { name, email, password } = req.body;
 
   const user = DUMMY_USERS.find(u => u.email === email);
   if (user) {
-    throw new HttpError('User with provided email already exists', 422);
+    return res.status(422).json({ message: 'User with provided email already exists' });
   };
 
   const newUser = {
@@ -39,7 +44,7 @@ exports.login = (req, res) => {
 
   const user = DUMMY_USERS.find(u => u.email === email);
   if (!user || user.password !== password) {
-    throw new HttpError('User does not exist', 401);
+    return res.status(401).json({ message: 'User does not exist.' });
   };
 
   res.status(200).json({ message: 'login successful' });

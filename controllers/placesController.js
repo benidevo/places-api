@@ -1,6 +1,5 @@
-const {v4: uuid} = require('uuid');
-
-const HttpError = require('../models/httpError');
+const { v4: uuid } = require('uuid');
+const { validationResult } = require('express-validator');
 
 const DUMMY_PLACES = [
   {
@@ -24,9 +23,7 @@ exports.getPlaceById = (req, res) => {
   });
 
   if (!place) {
-    return next(
-      new HttpError('Could not find a place with the provided ID', 404)
-    );
+    return res.status(404).json({ message: 'Could not find a place with the provided ID' });
   };
   
   res.json({ place: place });
@@ -40,14 +37,16 @@ exports.getPlacesByUserId = (req, res) => {
   });
   
   if (!places || places.length === 0) {
-    return next(
-      new Error('Could not find any place with the provided user ID', 404)
-    );
+    return res.status(404).json({ message: 'Could not find any place with the provided user ID' });
   };
   res.json({ places });
 };
 
 exports.createPlace = (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ message: 'Invalid inputs. Kindly check your inputs' });
+  }
   const { title, description, coordinates, address, creator } = req.body;
   const createdPlace = {
     id: uuid(),
@@ -57,13 +56,19 @@ exports.createPlace = (req, res) => {
     address,
     creator
   };
-
+  
   DUMMY_PLACES.push(createdPlace);
-
+  
   res.status(201).json({ place: createdPlace });
 };
 
 exports.updatePlace = (req, res) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ message: 'Invalid inputs. Kindly check your inputs' });
+  };
+
   const { title, description } = req.body;
   const id = req.params.pid;
 
@@ -83,6 +88,10 @@ exports.deletePlace = (req, res) => {
   const place = DUMMY_PLACES.find(p => {
     return p.id === id;
   });
+
+  if (!place) {
+    return res.status(404).json({ message: 'Could not find a place for that ID' });
+  }
 
   delete place;
   res.status(204).json({ message: 'Successfully deleted a place'});
