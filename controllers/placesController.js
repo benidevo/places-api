@@ -40,10 +40,11 @@ exports.getPlacesByUserId = async (req, res) => {
     if (!places || places.length === 0) {
       return res.status(404).json({ message: 'Could not find any place with the provided user ID' });
     };
-    res.status(200).json({ places });
+  
+    res.status(200).json({ places })
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: 'An unexpected error occurred' });
+    res.status(500).json({ message: 'An unexpected error occurred while trying to get place by Usser ID' });
   }
 };
 
@@ -103,17 +104,17 @@ exports.updatePlace = async (req, res) => {
   }
 };
 
-exports.deletePlace = (req, res) => {
+exports.deletePlace = async (req, res) => {
   const id = req.params.pid;
 
-  const place = DUMMY_PLACES.find(p => {
-    return p.id === id;
-  });
-
-  if (!place) {
+  let place;
+  try {
+    place = await Place.findById(id);
+  } catch (error) {
+    console.log(error)
     return res.status(404).json({ message: 'Could not find a place for that ID' });
   }
 
-  delete place;
+  place.delete();
   res.status(204).json({ message: 'Successfully deleted a place'});
 };
