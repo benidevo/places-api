@@ -44,7 +44,7 @@ exports.getPlacesByUserId = async (req, res) => {
     res.status(200).json({ places })
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: 'An unexpected error occurred while trying to get place by Usser ID' });
+    res.status(500).json({ message: 'An unexpected error occurred while trying to get place by User ID' });
   }
 };
 
@@ -67,7 +67,7 @@ exports.createPlace = async (req, res) => {
     location: coordinates,
     address,
     image: 'https://images.unsplash.com/photo-1564564321837-a57b7070ac4f?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1655&q=80',
-    creator
+    creator: []
   });
   
   try {

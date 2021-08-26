@@ -1,19 +1,17 @@
 const { validationResult } = require('express-validator');
-const { v4: uuid } = require('uuid');
 
 const User = require('../models/User');
 
-const DUMMY_USERS = [
-  {
-    id: 'u1',
-    name: 'John Doe',
-    email: 'johndoe@example.com',
-    password: 'testers'
-  }
-];
+exports.getUsers = async (req, res) => {
+  try {
+    const users = await User.find({}, '-password');
+    if (!users) { res.status(404).json({ message: 'error trying to get users' }) };
 
-exports.getUsers = (req, res) => {
-  res.status(200).json({ users: DUMMY_USERS });
+    res.status(200).json({ users: users.map(user => user.toObject({ getters: true })) });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'unexpected server error'})
+  }
 };
 
 exports.signup = async (req, res) => {
@@ -27,29 +25,42 @@ exports.signup = async (req, res) => {
   let user;
   try {
     user = await User.find({ email });
+    if (user) {
+      return res.status(422).json({ message: 'User with provided email already exists' });
+    };
+
+    const newUser = new User({
+      name,
+      email,
+      password,
+      image: 'http:gogo',
+      places: []
+    });
+  
+    await newUser.save();
+    res.status(201).json({ user: newUser });
   } catch (error) {
-    res.status(422).json({ message: 'User with provided email already exists' });
+    console.log(error);
+    res.status(500).json({message: 'unexpected server error'})
   }
-
-  const newUser = new User({
-    name,
-    email,
-    password,
-    image: 'http:gogo',
-    places: 'this are my places'
-  });
-
-  await newUser.save();
-  res.status(201).json({ user: newUser });
 };
 
-exports.login = (req, res) => {
+exports.login = async (req, res) => {
   const { email, password } = req.body;
 
-  const user = DUMMY_USERS.find(u => u.email === email);
-  if (!user || user.password !== password) {
-    return res.status(401).json({ message: 'User does not exist.' });
-  };
-
-  res.status(200).json({ message: 'login successful' });
+  let user;
+  try {
+    user = await User.findOne({ email: email });
+    if (!user) {
+      return res.status(404).json({ message: 'user does not exist' });
+    }
+    
+    if (user.password !== password) {
+      return res.status(401).json({ message: 'Incorrect password.' });
+    };
+    res.status(200).json({ message: 'login successful' });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({message: 'Unexpected server error'})
+  }
 };
