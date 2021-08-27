@@ -14,7 +14,7 @@ exports.getPlaceById = async (req, res) => {
     if (!place) {
       return res.status(404).json({ message: 'Could not find a place with the provided ID' });
     };
-    res.status(200).json({ place: place });
+    res.status(200).json({ place: place.toObject({getters: true}) });
   } catch (error) {
     res.status(500).json({ message: 'An error occurred while trying to get place by ID' });
   };
@@ -47,7 +47,8 @@ exports.createPlace = async (req, res) => {
   try {
     coordinates = await getCoordsForAddress(address);
   } catch (error) {
-    res.status(400).json({ message: error });
+    console.log(error)
+    res.status(500).json({ message: error });
   }
   const createdPlace = new Place({
     title,
@@ -71,8 +72,9 @@ exports.createPlace = async (req, res) => {
     await user.save({ session: sess });
     await sess.commitTransaction();
     
-    res.status(201).json({ place: createdPlace });
+    res.status(201).json({ place: createdPlace.toObject({getters: true}) });
   } catch (error) {
+    console.log(error)
     res.status(400).json({message: 'An unexpected server error occurred.'})
   }
 };
@@ -96,8 +98,9 @@ exports.updatePlace = async (req, res) => {
     const place = await Place.findOneAndUpdate({ _id: id }, newPlace, { new: true });
     place.save();
     
-    res.status(200).json({ place: place });
+    res.status(200).json({ place: place.toObject({getters: true}) });
   } catch (error) {
+    console.log(error)
     return res.status(404).json({ message: 'Place with provided ID does not exist' })
   }
 };
