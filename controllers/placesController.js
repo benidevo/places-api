@@ -1,10 +1,12 @@
 const { v4: uuid } = require('uuid');
 const mongoose = require('mongoose');
+const fs = require('fs');
 const { validationResult } = require('express-validator');
 const Place = require('../models/Place');
 
 const getCoordsForAddress = require('../utils/location');
 const User = require('../models/User');
+const deleteFile = require('../utils/deleteFile');
 
 exports.getPlaceById = async (req, res) => {
   const placeId = req.params.pid
@@ -39,6 +41,7 @@ exports.getPlacesByUserId = async (req, res) => {
 exports.createPlace = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    deleteFile(req);
     return res.status(400).json({ message: 'Invalid inputs. Kindly check your inputs' });
   }
   const { title, description, address, creator } = req.body;
@@ -47,7 +50,8 @@ exports.createPlace = async (req, res) => {
   try {
     coordinates = await getCoordsForAddress(address);
   } catch (error) {
-    console.log(error)
+    deleteFile(req);
+    console.log(error);
     res.status(500).json({ message: error });
   }
   const createdPlace = new Place({
@@ -55,12 +59,13 @@ exports.createPlace = async (req, res) => {
     description,
     location: coordinates,
     address,
-    image: 'https://images.unsplash.com/photo-1564564321837-a57b7070ac4f?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1655&q=80',
+    image: req.file.path,
     creator,
   });
   
   const user = await User.findById(creator);
   if (!user) {
+    deleteFile(req);
     return res.status(404).json({message: 'Creator is not a registered user.'})
   }
 
@@ -74,8 +79,9 @@ exports.createPlace = async (req, res) => {
     
     res.status(201).json({ place: createdPlace.toObject({getters: true}) });
   } catch (error) {
-    console.log(error)
-    res.status(400).json({message: 'An unexpected server error occurred.'})
+    deleteFile(req);
+    console.log(error);
+    res.status(400).json({ message: 'An unexpected server error occurred.' });
   }
 };
 
@@ -121,6 +127,8 @@ exports.deletePlace = async (req, res) => {
     return res.status(404).json({ message: 'Could not find place for this id.'});
   }
 
+  const imagePath = place.image
+
   try {
     const sess = await mongoose.startSession();
     sess.startTransaction();
@@ -132,6 +140,9 @@ exports.deletePlace = async (req, res) => {
     res.status(500).json({message: 'unexpected server error'})
   }
 
+  await fs.unlink(imagePath, err => {
+    console.log(err)
+  });
   res.status(200).json({ message: 'Deleted place.' });
 
 };

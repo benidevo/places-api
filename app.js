@@ -1,6 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const path = require('path');
+
 require('dotenv').config();
 
 const PlacesRoutes = require('./routes/placesRoutes');
@@ -9,6 +11,8 @@ const usersRoutes = require('./routes/usersRoutes');
 const app = express();
 
 app.use(bodyParser.json());
+
+app.use('/uploads/images', express.static(path.join('uploads', 'images')));
 
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');

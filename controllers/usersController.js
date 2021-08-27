@@ -1,6 +1,7 @@
 const { validationResult } = require('express-validator');
 
 const User = require('../models/User');
+const deleteFile = require('../utils/deleteFile');
 
 exports.getUsers = async (req, res) => {
   try {
@@ -20,6 +21,7 @@ exports.signup = async (req, res) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
+    deleteFile(req)
     return res.status(400).json({ message: 'Invalid Input. Kindly check your input values,' });
   }
   const { name, email, password } = req.body;
@@ -29,6 +31,7 @@ exports.signup = async (req, res) => {
     const user = await User.findOne({ email: email });
 
     if (user) {
+      deleteFile(req)
       return res.status(422).json({ message: 'User with provided email already exists' });
     };
     
@@ -36,13 +39,14 @@ exports.signup = async (req, res) => {
       name,
       email,
       password,
-      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1500&q=80',
+      image: req.file.path,
       places: []
     });
     
     await newUser.save();
     res.status(201).json({ user: newUser.toObject({getters: true}) });
   } catch (error) {
+    deleteFile(req)
     console.log(error);
     res.status(500).json({message: 'unexpected server error'})
   }
