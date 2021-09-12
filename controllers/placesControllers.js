@@ -51,7 +51,7 @@ const getPlacesByUserId = async (req, res, next) => {
   // if (!places || places.length === 0) {
   if (!userWithPlaces || userWithPlaces.places.length === 0) {
     return next(
-      new HttpError('Could not find places for the provided user id.', 404)
+      new HttpError('No Places Found', 404)
     );
   }
 
@@ -100,7 +100,7 @@ const createPlace = async (req, res, next) => {
   }
 
   if (!user) {
-    const error = new HttpError('Could not find user for provided id.', 404);
+    const error = new HttpError('No Places Found.', 404);
     return next(error);
   }
 
@@ -182,7 +182,7 @@ const deletePlace = async (req, res, next) => {
   }
 
   if (!place) {
-    const error = new HttpError('Could not find place for this id.', 404);
+    const error = new HttpError('No Places Found', 404);
     return next(error);
   }
 
